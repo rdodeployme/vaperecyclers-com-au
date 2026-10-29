@@ -46,6 +46,12 @@ ICONS = {
   'doc': svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>'),
   'menu': svg('<path d="M4 7h16M4 12h16M4 17h16"/>'),
   'sun': svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  'compact': svg('<path d="M4 4h16M12 4v6M8 7l4 4 4-4M4 20h16M12 20v-6M8 17l4-4 4 4"/>'),
+  'heat': svg('<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>'),
+  'factory': svg('<path d="M2 20h20M4 20V10l5 3V10l5 3V6h6v14"/><path d="M8 16h.01M12 16h.01M16 16h.01"/>'),
+  'law': svg('<path d="M12 3v18M5 7h14M8 21h8M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/>'),
+  'chip': svg('<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>'),
+  'users': svg('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>'),
   'child': svg('<circle cx="12" cy="5" r="2.5"/><path d="M12 8v7M8 11h8M9 22l3-7 3 7"/>'),
 }
 
@@ -58,13 +64,15 @@ LOGO = ('<svg viewBox="0 0 40 40" aria-hidden="true">'
         '<rect x="19.3" y="17.4" width="1.4" height="4.4" rx=".7" fill="#1FE3A0"/>'
         '</svg>')
 
-NAV = [('index.html', 'Home', 'home'), ('bins.html', 'Collection bins', 'bins'),
-       ('drop-off.html', 'Drop-off', 'drop'), ('safe-handling.html', 'Safe handling', 'guide'),
+NAV = [('index.html', 'Home', 'home'), ('bins.html', 'Bins', 'bins'),
+       ('drop-off.html', 'Drop-off', 'drop'), ('who-we-help.html', 'Who we help', 'who'),
+       ('fire-risk.html', 'Fire risk', 'fire'), ('how-we-recycle.html', 'How we recycle', 'how'),
        ('faq.html', 'FAQ', 'faq'), ('contact.html', 'Contact', 'contact')]
+SECTOR_KEYS = {'pharmacies', 'schools', 'councils', 'workplaces'}
 
 def header(active):
     links = ''.join(
-        f'<a href="{h}"{" aria-current=\"page\"" if k == active else ""}>{t}</a>' for h, t, k in NAV if k != 'home')
+        f'<a href="{h}"{" aria-current=\"page\"" if (k == active or (k == "who" and active in SECTOR_KEYS)) else ""}>{t}</a>' for h, t, k in NAV if k != 'home')
     return f'''<a class="skip" href="#main">Skip to content</a>
 <header class="site-head">
   <div class="wrap head-in">
@@ -88,15 +96,26 @@ FOOTER = f'''<footer class="site-foot">
           <li><a href="drop-off.html">Drop-off</a></li>
           <li><a href="drop-off.html#bulk">Bulk drop-off</a></li>
           <li><a href="bins.html#request">Request a bin</a></li>
+          <li><a href="contact.html">Contact</a></li>
         </ul>
       </div>
       <div>
-        <h4>Help</h4>
+        <h4>Who we help</h4>
         <ul>
+          <li><a href="pharmacies.html">Pharmacies</a></li>
+          <li><a href="schools.html">Schools</a></li>
+          <li><a href="councils.html">Councils</a></li>
+          <li><a href="workplaces.html">Workplaces</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="fire-risk.html">Vape fire risk</a></li>
+          <li><a href="how-we-recycle.html">How we recycle</a></li>
           <li><a href="safe-handling.html">Safe handling</a></li>
           <li><a href="safe-handling.html#accepted">What we take</a></li>
           <li><a href="faq.html">FAQ</a></li>
-          <li><a href="contact.html">Contact</a></li>
         </ul>
       </div>
       <div>
@@ -159,6 +178,8 @@ def main():
         title, desc, active = lines[0].strip(), lines[1].strip(), lines[2].strip()
         body = '\n'.join(lines[3:])
         body = re.sub(r'\{\{i:([a-z]+)\}\}', lambda m: ICONS[m.group(1)], body)
+        # glue the last two words of short text blocks so no word sits alone on the last line
+        body = re.sub(r'(?<=[A-Za-z,;)]) ([A-Za-z][A-Za-z\-]{0,13}[.!?]?)</(p|small)>', r'&nbsp;\1</\2>', body)
         (ROOT / f.name).write_text(page(title, desc, active, body, f.name))
         print('built', f.name)
     (ROOT / 'favicon.svg').write_text(LOGO.replace('aria-hidden="true"', 'xmlns="http://www.w3.org/2000/svg"'))
